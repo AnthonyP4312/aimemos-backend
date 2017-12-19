@@ -1,7 +1,10 @@
 (ns aimemos.core
   (:require [hugsql.core :refer [def-db-fns]]
             [aimemos.db :refer [db]]
+            [ring.middleware.reload :refer [wrap-reload]]
+            [ring.util.response :as r]
             [cheshire.core :as json]
+            [org.httpkit.server :refer :all]
             [compojure.core :refer :all]
             [compojure.route :as route]
             [buddy.auth :refer [authenticated?]]
@@ -16,18 +19,53 @@
 
 (defonce current-users (atom {}))
 
+(defn send-message [params]
+  (println "hey were sending a message!")
+  (println params)
+  (println @current-users))
+
+(defn socket-handler
+  "Receives a JSON string and performs various operations based on the contents"
+  ;; :method - message or api call
+  ;; :params - map of relevant parameters to method
+  [user, m]
+  (println "oh shit socket action going on")
+  (println m)
+  (println (json/decode m true))
+  (let [{:keys [method params]} (json/decode m true)]
+    (case method
+      "send-message" (send-message (assoc params :from user))
+      "add-buddy" (add-buddy db (assoc params :username user))
+      "delete-buddy" (delete-buddy db (assoc params :username user))
+      "update-status" (update-status db (assoc params :username user))
+      "update-groupname" (update-groupname db (assoc params :username user))
+      "buddies-by-user" (buddies-by-user db {:username user}))))
+
+
+(defn disconnect!
+  [user status]
+  (println (str "shits dead my dude: " user status)))
+
 (defn my-authfn [req auth]
   (when (check (:password auth) 
                (:password (password-by-user db {:username (:username auth)})))
-    (swap! current-users 
+    (:username auth)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Route Handlers
+
+(defn chat-handler [req]
+
+  (println req)
+  (println "WEBSOCKET REQUEST =====")
+  (if (authenticated? req)
+    (swap! current-users
            assoc
-           (keyword (:username auth))
-           (str (java.util.UUID/randomUUID)))
-    (keyword (:username auth))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Route Handlers
+           (keyword (:identity req))
+           (with-channel req channel
+             (on-close channel (partial disconnect! (:identity req)))
+             (on-receive channel (partial socket-handler (:identity req)))))
+    {:status 401}))
 
 (defn home-page [] )
 (defn sign-up-page [])
@@ -39,20 +77,22 @@
                 :status "OFFLINE"}))
 
 
-(defn login [req]
-  "Login Handler, returns a token for future auth or 401"
-  (let [user (str (:identity req))]
-    (println  (authenticated? req))
-    (println (str req))
-    (println @current-users)
-    (if (authenticated? req)
-      (json/encode {:token ((:identity req) @current-users)
-                    :buddies (buddies-by-user db {:username user})})
-      {:status 401})))
+(defn buddy-list [req]
+  "Returns a map of buddies by user"
+  (println (str req))
+  (let [buddies (buddies-by-user db {:username req})]
+    (println buddies "\n\n")
+
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (json/encode buddies)}))
+  
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Route Definitions
+;;;; Route Definitions
+
+
 
 
 (defroutes webpage
@@ -61,20 +101,26 @@
   (POST "/aim/signup" [user pass] (create-account user pass)))
 
 (defroutes user-login
-  (POST "/aim/login" req (login req)))
+  (GET  "/ws" req (chat-handler req)))
 
 (defroutes user-api
-  (POST "/aim/add-buddy" [])
-  (POST "/aim/delete-buddy" [])
-  (POST "/aim/buddies-by-user" [])
-  (POST "/aim/update-status" [])
-  (POST "/aim/update-groupname" []))
+  (POST "/aim/add-buddy" req nil)
+  (POST "/aim/delete-buddy" req nil)
+  (GET "/aim/buddies-by-user/:user" [user] (buddy-list user))
+  (POST "/aim/update-status" req nil)
+  (POST "/aim/update-groupname" req nil))
 
 (def app 
-  (routes 
+  (routes
+   user-api
    webpage
    (-> user-login
        (wrap-authentication (basic {:authfn my-authfn}))
        (wrap-authorization (basic {:authfn my-authfn})))
 ;   (wrap-authentication user-api token)
    ))
+
+
+(defn -main
+  [& args]
+  (run-server (wrap-reload app) {:port 3000}))

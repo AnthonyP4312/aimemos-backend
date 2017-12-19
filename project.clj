@@ -10,15 +10,15 @@
                  [buddy/buddy-hashers "1.3.0"]
                  [compojure "1.6.0"]
                  [cheshire "5.8.0"]
-                 [ring/ring-defaults "0.2.1"]
-                 [ring/ring-jetty-adapter "1.5.1"]]
+                 [http-kit "2.2.0"]
+                 [ring "1.6.3"]
+                 [ring/ring-defaults "0.2.1"]]
   :plugins [[lein-ring "0.9.7"]
             [cider/cider-nrepl "0.16.0-SNAPSHOT"]]
   :ring {:handler aimemos.core/app}
   :main aimemos.core
   :aot [:all]
-  :profiles
-    {:dev {:dependencies [[ring/ring-jetty-adapter "1.5.1"]
-                          [ring/ring-mock "0.3.0"]]}})
+  
+   )
 
                
