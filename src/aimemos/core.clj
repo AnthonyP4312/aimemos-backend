@@ -22,7 +22,8 @@
 (defn send-message [params]
   (println "hey were sending a message!")
   (println params)
-  (println @current-users))
+  (println @current-users)
+  (send! ((keyword (:to params)) @current-users) (json/generate-string params)))
 
 (defn socket-handler
   "Receives a JSON string and performs various operations based on the contents"
@@ -47,6 +48,7 @@
   (println (str "shits dead my dude: " user status)))
 
 (defn my-authfn [req auth]
+  (println auth)
   (when (check (:password auth) 
                (:password (password-by-user db {:username (:username auth)})))
     (:username auth)))
@@ -59,12 +61,12 @@
   (println req)
   (println "WEBSOCKET REQUEST =====")
   (if (authenticated? req)
-    (swap! current-users
-           assoc
-           (keyword (:identity req))
-           (with-channel req channel
-             (on-close channel (partial disconnect! (:identity req)))
-             (on-receive channel (partial socket-handler (:identity req)))))
+    (let [res (with-channel req channel
+                (on-close channel (partial disconnect! (:identity req)))                 
+                (on-receive channel (partial socket-handler (:identity req))))]
+      (println "oh")
+      (swap! current-users assoc (keyword (:identity req)) (:body res))
+      res)
     {:status 401}))
 
 (defn home-page [] )
@@ -116,9 +118,7 @@
    webpage
    (-> user-login
        (wrap-authentication (basic {:authfn my-authfn}))
-       (wrap-authorization (basic {:authfn my-authfn})))
-;   (wrap-authentication user-api token)
-   ))
+       (wrap-authorization (basic {:authfn my-authfn})))))
 
 
 (defn -main
