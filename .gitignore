@@ -9,3 +9,4 @@ pom.xml.asc
 .hgignore
 .hg/
 src/aimemos/db.clj
+dbpassword.txt
