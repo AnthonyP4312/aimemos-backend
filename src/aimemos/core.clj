@@ -123,4 +123,4 @@
 
 (defn -main
   [& args]
-  (run-server (wrap-reload app) {:port 3000}))
+  (run-server app {:port 3000}))
