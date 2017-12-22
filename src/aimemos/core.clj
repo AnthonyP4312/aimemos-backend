@@ -23,7 +23,16 @@
   (println "hey were sending a message!")
   (println params)
   (println @current-users)
-  (send! ((keyword (:to params)) @current-users) (json/generate-string params)))
+  (try
+    (send! ((keyword (:to params)) @current-users) (json/generate-string params))
+    (catch Exception ex
+      (send! 
+       ((keyword (:from params)) @current-users) 
+       (json/encode {:to (:from params)
+                     :from "SYS_MSG"
+                     :message (str "Theyre probably not online.
+                                     Sorry. Have an error instead"
+                                   (.getMessage ex))})))))
 
 (defn socket-handler
   "Receives a JSON string and performs various operations based on the contents"
@@ -45,7 +54,9 @@
 
 (defn disconnect!
   [user status]
-  (println (str "shits dead my dude: " user status)))
+  (println (str "shits dead my dude: " user status))
+  (swap! current-users dissoc (keyword user))
+  (println "New CUrrent Users: " @current-users))
 
 (defn my-authfn [req auth]
   (println auth)
