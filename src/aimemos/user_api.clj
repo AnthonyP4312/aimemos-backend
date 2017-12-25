@@ -7,7 +7,12 @@
 
 ;; This file should define all the functions for users interaction
 
-
+(defmacro safe-db
+  [func]
+  `(try 
+     ~func
+     (catch Exception ex#
+       (println "Ate an exception: " ex#))))
 
 (defn send-message 
   "{:to :from :message}\nSends a Message from one user to another"
@@ -30,6 +35,7 @@
   "{:username :buddyname :groupname}\nAdds adds one user to another's
   buddylist under the groupname provided"
   [{:keys [username buddyname groupname]} params]
+  (when (safe-db (db/add-buddy db params)))
   )
 
 
