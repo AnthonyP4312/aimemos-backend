@@ -1,12 +1,11 @@
 (ns aimemos.core
-  (:require [hugsql.core :refer [def-db-fns]]
-            [aimemos.db :refer [db]]
+  (:require [aimemos.db :refer :all]
+            [aimemos.user-api :as api]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.util.response :as r]
             [cheshire.core :as json]
             [org.httpkit.server :refer :all]
             [compojure.core :refer :all]
-            [compojure.route :as route]
             [buddy.auth :refer [authenticated?]]
             [buddy.auth.middleware :refer [wrap-authorization
                                            wrap-authentication]]
@@ -15,24 +14,6 @@
   (:gen-class))
 
 
-(def-db-fns "sql/queries.sql")
-
-(defonce current-users (atom {}))
-
-(defn send-message [params]
-  (println "hey were sending a message!")
-  (println params)
-  (println @current-users)
-  (try
-    (send! ((keyword (:to params)) @current-users) (json/generate-string params))
-    (catch Exception ex
-      (send! 
-       ((keyword (:from params)) @current-users) 
-       (json/encode {:to (:from params)
-                     :from "SYS_MSG"
-                     :message (str "Theyre probably not online.
-                                     Sorry. Have an error instead"
-                                   (.getMessage ex))})))))
 
 (defn socket-handler
   "Receives a JSON string and performs various operations based on the contents"
@@ -44,12 +25,12 @@
   (println (json/decode m true))
   (let [{:keys [method params]} (json/decode m true)]
     (case method
-      "send-message" (send-message (assoc params :from user))
-      "add-buddy" (add-buddy db (assoc params :username user))
-      "delete-buddy" (delete-buddy db (assoc params :username user))
-      "update-status" (update-status db (assoc params :username user))
-      "update-groupname" (update-groupname db (assoc params :username user))
-      "buddies-by-user" (buddies-by-user db {:username user}))))
+      "send-message" (api/send-message (assoc params :from user))
+      "add-buddy" (api/add-buddy (assoc params :username user))
+      "delete-buddy" (api/delete-buddy (assoc params :username user))
+      "update-status" (api/update-status (assoc params :username user))
+      "update-groupname" (api/update-groupname (assoc params :username user))
+      "buddies-by-user" (api/buddies-by-user {:username user}))))
 
 
 (defn disconnect!
