@@ -22,11 +22,7 @@
   (GET  "/ws" req (chat-handler req)))
 
 (defroutes user-api
-  (POST "/aim/add-buddy" req nil)
-  (POST "/aim/delete-buddy" req nil)
-  (GET "/aim/buddies-by-user/:user" [user] (buddy-list user))
-  (POST "/aim/update-status" req nil)
-  (POST "/aim/update-groupname" req nil))
+  (GET "/aim/buddies-by-user/:user" [user] (buddy-list user)))
 
 (def app 
   (routes

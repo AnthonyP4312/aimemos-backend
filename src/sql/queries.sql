@@ -36,6 +36,7 @@ SET status = :status::status
 WHERE username = :username
 
 --:name update-groupname :! :n
+--:doc (db {:username :buddyname})
 UPDATE buddies
 SET groupname = :groupname
 WHERE username = :username AND buddyname = :buddyname

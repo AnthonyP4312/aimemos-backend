@@ -7,7 +7,8 @@
             [buddy.hashers :refer [derive check] :rename {derive bcrypt}]))
 
 (defn socket-handler
-  "Receives a JSON string and performs various operations based on the contents"
+  "Receives a JSON string and performs various operations based on the
+  contents"
   ;; :method - message or api call
   ;; :params - map of relevant parameters to method
   [user, m]
@@ -30,13 +31,8 @@
   (swap! current-users dissoc (keyword user))
   (println "New CUrrent Users: " @current-users))
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; Route Handlers
-
-(defn chat-handler [req]
-
+(defn chat-handler
+  [req]
   (println req)
   (println "WEBSOCKET REQUEST =====")
   (if (authenticated? req)
@@ -48,22 +44,20 @@
       res)
     {:status 401}))
 
-
-
-(defn create-account [user pass]
+(defn create-account 
+  [user pass]
   (println user)
   (println pass)
   (add-user db {:username user
                 :password (bcrypt pass)
                 :status "OFFLINE"}))
 
-
-(defn buddy-list [req]
+(defn buddy-list 
   "Returns a map of buddies by user"
+  [req]
   (println (str req))
   (let [buddies (buddies-by-user db {:username req})]
     (println buddies "\n\n")
-
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body (json/encode buddies)}))

@@ -13,12 +13,9 @@
                  [http-kit "2.2.0"]
                  [ring "1.6.3"]
                  [ring/ring-defaults "0.2.1"]]
-  :plugins [[lein-ring "0.9.7"]
-            [cider/cider-nrepl "0.16.0-SNAPSHOT"]]
+  :plugins [[lein-ring "0.9.7"]]
   :ring {:handler aimemos.core/app}
   :main aimemos.core
-  :aot [:all]
-  
-   )
+  :aot [:all])
 
                

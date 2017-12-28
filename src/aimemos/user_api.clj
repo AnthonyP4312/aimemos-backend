@@ -4,9 +4,6 @@
             [hugsql.core :as sql]
             [org.httpkit.server :refer [send!]]))
 
-
-;; This file should define all the functions for users interaction
-
 (defmacro safe-db
   [func]
   `(try 
@@ -15,7 +12,7 @@
        (println "Ate an exception: " ex#))))
 
 (defn send-message 
-  "{:to :from :message}\nSends a Message from one user to another"
+  "{:to :from :message}\n  Sends a Message from one user to another"
   [params]
   (println "hey were sending a message!")
   (println params)
@@ -32,29 +29,43 @@
                                    (.getMessage ex))})))))
 
 (defn add-buddy 
-  "{:username :buddyname :groupname}\nAdds adds one user to another's
+  "{:username :buddyname :groupname}\n  Adds adds one user to another's
   buddylist under the groupname provided"
-  [{:keys [username buddyname groupname]} params]
-  (when (safe-db (db/add-buddy db params)))
-  )
+  [params]
+  (when (safe-db (db/add-buddy db params))
+    (send! (@current-users (keyword (:username params))) 
+           (db/buddies-by-user db {:username (:username params)}))))
 
 
 (defn delete-buddy
-  "{:username :buddyname}\nDeletes a Buddy from a user's Buddy List"
-  [{:keys [username buddyname]} params]
-  
-  )
+  "{:username :buddyname}\n  Deletes a Buddy from a user's Buddy List"
+  [params]
+  (when (safe-db (db/delete-buddy db params))
+    (send! (@current-users (keyword (params :username)))
+           (db/buddies-by-user db {:username (params :username)}))))
 
 (defn update-status
-  "{:username :status}\nToggle the user between the statuses of ONLINE,
+  "{:username :status}\n  Toggle the user between the statuses of ONLINE,
   OFFLINE, and AWAY"
-  [{:keys [user status]} params])
+  [params]
+  (when (safe-db (db/update-status db params))
+    ;; Query users with this person in their list, and notify them of
+    ;; the change
+    (let [users (db/users-by-buddy {:buddyname (params :username)})]
+      (doseq [user users]
+        (when-let [user-chan (@current-users (keyword user))]
+          (send! user-chan (db/buddies-by-user db {:username user})))))))
 
 (defn update-groupname
-  "{:username :buddyname :groupname}\nChange the group specified for a buddy"
-  [{:keys [user buddy group]} params])
+  "{:username :buddyname :groupname}\n  Change the group specified for a
+  buddy"
+  [params]
+  (when (safe-db (db/update-groupname db params))
+    (send! (@current-users (keyword (params :username)))
+           (db/buddies-by-user db {:username (params :username)}))))
 
 (defn buddies-by-user
-  "{:username}\nReturn the current list of buddies for a user"
-  [{:keys [username]} params]
-  )
+  "{:username}\n  Return the current list of buddies for a user"
+  [params]
+  (send! (@current-users (keyword (params :username))) 
+         (db/buddies-by-user db params)))
