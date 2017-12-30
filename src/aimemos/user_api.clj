@@ -24,9 +24,9 @@
       (let [reply {(json/encode {:to (:from params)
                                  :from "SYSTEM_MSG"
                                  :message "Something unexpected
-                     happened! That message probably didnt send"})}])
-      (println reply)
-      (send! ((keyword (:from params)) @current-users) reply))))
+                     happened! That message probably didnt send"})}]
+        (println reply)
+        (send! ((keyword (:from params)) @current-users) reply)))))
 
 
 
