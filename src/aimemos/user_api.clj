@@ -59,7 +59,7 @@
   (when (safe-db (db/update-status db params))
     ;; Query users with this person in their list, and notify them of
     ;; the change
-    (let [users (db/users-by-buddy {:buddyname (params :username)})]
+    (let [users (db/users-by-buddy db {:buddyname (params :username)})]
       (doseq [user users]
         (when-let [user-chan (@current-users (keyword user))]
           (json/encode (send! user-chan (db/buddies-by-user db {:username user}))))))))
