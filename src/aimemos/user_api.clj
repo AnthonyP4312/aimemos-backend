@@ -60,7 +60,7 @@
     ;; Query users with this person in their list, and notify them of
     ;; the change
     (let [users (db/users-by-buddy db {:buddyname (params :username)})]
-      (doseq [user users]
+      (doseq [user (map :username users)]
         (when-let [user-chan (@current-users (keyword user))]
           (send! user-chan (json/encode (db/buddies-by-user db {:username user}))))))))
 
