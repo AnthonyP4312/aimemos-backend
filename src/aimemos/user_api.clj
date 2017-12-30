@@ -9,7 +9,7 @@
   `(try 
      ~func
      (catch Exception ex#
-       (println "Ate an exception: " ex#))))
+       (println "Ate an exception: " (ex# :cause)))))
 
 (defn send-message 
   "{:to :from :message}\n  Sends a Message from one user to another"
@@ -20,13 +20,13 @@
   (try
     (send! ((keyword (:to params)) @current-users) (json/encode params))
     (catch Exception ex
+      (println ex)
       (send! 
        ((keyword (:from params)) @current-users) 
        (json/encode {:to (:from params)
                      :from "SYSTEM_MSG"
-                     :message (str "Theyre probably not online. " 
-                                   "Sorry. Have an error instead.\n\n"
-                                   (.getMessage ex))})))))
+                     :message "Something unexpected happened! That
+                     message probably didnt send"})))))
 
 
 
