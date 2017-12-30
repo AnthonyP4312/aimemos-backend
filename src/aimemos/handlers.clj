@@ -29,6 +29,7 @@
   [user status]
   (println (str "shits dead my dude: " user status))
   (swap! current-users dissoc (keyword user))
+  (api/update-status {:username user :status "OFFLINE"})
   (println "New CUrrent Users: " @current-users))
 
 (defn chat-handler
@@ -40,6 +41,7 @@
                 (on-close channel (partial disconnect! (:identity req))) 
                 (on-receive channel (partial socket-handler (:identity req))))]
       (println "oh")
+      (api/update-status {:username (:identity req) :status "ONLINE"})
       (swap! current-users assoc (keyword (:identity req)) (:body res))
       res)
     {:status 401}))

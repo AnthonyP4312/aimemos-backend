@@ -2,7 +2,8 @@
   (:require [aimemos.db :as db :refer [db current-users]]
             [cheshire.core :as json]
             [hugsql.core :as sql]
-            [org.httpkit.server :refer [send!]]))
+            [org.httpkit.server :refer [send!]]
+            [clojure.string :as string]))
 
 (defmacro safe-db
   [func]
@@ -19,13 +20,18 @@
   (println @current-users)
   (try
     (send! ((keyword (:to params)) @current-users) (json/encode params))
+    (catch IllegalArgumentException ex
+      (let [reply (json/encode {:to (:from params)
+                                :from (:to params)
+                                :message "I'm offline right now!"})]
+        (send! ((keyword (:from params)) @current-users) reply)))
     (catch Exception ex
       (println ex)
       (let [reply (json/encode {:to (:from params)
                                 :from "SYSTEM_MSG"
-                                :message "Something unexpected
-                     happened! That message probably didnt send"})]
-        (println reply)
+                                :message (str "Something unexpected" 
+                                              " happened! That message"
+                                              " probably didnt send")})]
         (send! ((keyword (:from params)) @current-users) reply)))))
 
 
