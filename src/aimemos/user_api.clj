@@ -21,10 +21,10 @@
     (send! ((keyword (:to params)) @current-users) (json/encode params))
     (catch Exception ex
       (println ex)
-      (let [reply {(json/encode {:to (:from params)
-                                 :from "SYSTEM_MSG"
-                                 :message "Something unexpected
-                     happened! That message probably didnt send"})}]
+      (let [reply (json/encode {:to (:from params)
+                                :from "SYSTEM_MSG"
+                                :message "Something unexpected
+                     happened! That message probably didnt send"})]
         (println reply)
         (send! ((keyword (:from params)) @current-users) reply)))))
 
