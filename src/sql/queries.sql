@@ -15,7 +15,7 @@ DELETE FROM users
 WHERE username = :username
 
 --:name buddies-by-user :? :*
-SELECT u.username, b.groupname, u.status 
+SELECT u.username, b.groupname, u.status
 FROM users AS u
 JOIN (SELECT buddyname, groupname FROM buddies WHERE username = :username) AS b
 ON u.username = b.buddyname

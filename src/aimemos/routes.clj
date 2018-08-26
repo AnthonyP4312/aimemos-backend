@@ -9,7 +9,7 @@
 
 (defn my-authfn [req auth]
   (println auth)
-  (when (check (:password auth) 
+  (when (check (:password auth)
                (:password (password-by-user db {:username (:username auth)})))
     (:username auth)))
 
@@ -24,7 +24,7 @@
 (defroutes user-api
   (GET "/aim/buddies-by-user/:user" [user] (buddy-list user)))
 
-(def app 
+(def app
   (routes
    user-api
    webpage

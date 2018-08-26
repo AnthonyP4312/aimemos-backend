@@ -3,7 +3,7 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.postgresql/postgresql "42.1.4"]
                  [com.layerware/hugsql "0.4.8"]
                  [buddy/buddy-auth "2.1.0"]
@@ -17,5 +17,3 @@
   :ring {:handler aimemos.core/app}
   :main aimemos.core
   :aot [:all])
-
-               

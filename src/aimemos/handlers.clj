@@ -12,7 +12,7 @@
   ;; :method - message or api call
   ;; :params - map of relevant parameters to method
   [user, m]
-  (println "oh shit socket action going on")
+  (println "socket action going on")
   (println m)
   (println (json/decode m true))
   (let [{:keys [method params]} (json/decode m true)]
@@ -27,7 +27,7 @@
 
 (defn disconnect!
   [user status]
-  (println (str "shits dead my dude: " user status))
+  (println (str "its dead my dude: " user status))
   (swap! current-users dissoc (keyword user))
   (api/update-status {:username user :status "OFFLINE"})
   (println "New CUrrent Users: " @current-users))
@@ -38,7 +38,7 @@
   (println "WEBSOCKET REQUEST =====")
   (if (authenticated? req)
     (let [res (with-channel req channel
-                (on-close channel (partial disconnect! (:identity req))) 
+                (on-close channel (partial disconnect! (:identity req)))
                 (on-receive channel (partial socket-handler (:identity req))))]
       (println "oh")
       (api/update-status {:username (:identity req) :status "ONLINE"})
@@ -46,7 +46,7 @@
       res)
     {:status 401}))
 
-(defn create-account 
+(defn create-account
   [user pass]
   (println user)
   (println pass)
@@ -54,7 +54,7 @@
                 :password (bcrypt pass)
                 :status "OFFLINE"}))
 
-(defn buddy-list 
+(defn buddy-list
   "Returns a map of buddies by user"
   [req]
   (println (str req))
@@ -63,5 +63,3 @@
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body (json/encode buddies)}))
-  
-

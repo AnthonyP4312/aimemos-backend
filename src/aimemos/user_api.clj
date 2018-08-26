@@ -2,17 +2,17 @@
   (:require [aimemos.db :as db :refer [db current-users]]
             [cheshire.core :as json]
             [hugsql.core :as sql]
-            [org.httpkit.server :refer [send!]]
+            [org.httpkit.server :as http :refer [send!]]
             [clojure.string :as string]))
 
 (defmacro safe-db
   [func]
-  `(try 
+  `(try
      ~func
      (catch Exception ex#
        (println "Ate an exception: " (ex# :cause)))))
 
-(defn send-message 
+(defn send-message
   "{:to :from :message}\n  Sends a Message from one user to another"
   [params]
   (println "hey were sending a message!")
@@ -29,19 +29,19 @@
       (println ex)
       (let [reply (json/encode {:to (:from params)
                                 :from "SYSTEM_MSG"
-                                :message (str "Something unexpected" 
+                                :message (str "Something unexpected"
                                               " happened! That message"
                                               " probably didnt send")})]
         (send! ((keyword (:from params)) @current-users) reply)))))
 
 
 
-(defn add-buddy 
+(defn add-buddy
   "{:username :buddyname :groupname}\n  Adds adds one user to another's
   buddylist under the groupname provided"
   [params]
   (when (safe-db (db/add-buddy db params))
-    (send! (@current-users (keyword (:username params))) 
+    (send! (@current-users (keyword (:username params)))
            (json/encode (db/buddies-by-user db {:username (:username params)})))))
 
 
@@ -75,5 +75,5 @@
 (defn buddies-by-user
   "{:username}\n  Return the current list of buddies for a user"
   [params]
-  (send! (@current-users (keyword (params :username))) 
+  (send! (@current-users (keyword (params :username)))
          (json/encode (db/buddies-by-user db params))))
